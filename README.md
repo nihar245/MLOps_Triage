@@ -18,8 +18,7 @@ Before getting started, ensure you have the following installed on your machine:
 
 ### 1. Clone the Repository
 ```powershell
-git clone https://github.com/nsk724/autoTagger.git
-cd autoTagger
+git clone https://github.com/nihar245/MLOps_Triage.git .
 ```
 
 ### 2. Create Virtual Environment & Install Dependencies
