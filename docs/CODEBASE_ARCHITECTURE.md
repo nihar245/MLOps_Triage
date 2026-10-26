@@ -117,19 +117,20 @@ flowchart TD
 * **Rationale**: Pure bag-of-words (TF-IDF) captures specific keywords (e.g., *"VPN"*, *"invoice"*), while dense semantic embeddings (`all-MiniLM-L6-v2`) capture intent and semantic synonyms. Combining both via sparse-dense horizontal stacking achieves **>85% accuracy** on support tickets while running comfortably on CPU.
 * **Why CPU-Only?**: The dataset is ~9.3 MB and the MiniLM model is only 80 MB. Full CPU retraining takes **<8 seconds** with stratified sampling, completely removing the requirement for expensive GPUs or cloud servers.
 
-### Decision 2: The 54% Error Rate Alert Threshold (`0.54`)
-* **Why 0.54?**:
-  * With **10 support queues**, random guessing yields a 90% error rate (10% accuracy).
-  * A well-trained baseline model achieves ~61% accuracy, representing an error rate of ~39%.
-  * A jump in error rate from 39% to **54%** represents a **statistical red alert** (a drop of over 15 percentage points in accuracy). This signals either significant concept drift (e.g., new customer issues emerging) or severe data shift.
-* **Mathematical Implementation in PromQL**:
+### Decision 2: The Error Rate Alert Threshold & Alertmanager Webhook (`0.30`)
+* **Threshold & Trigger**:
+  * Configured at **0.30 (30% error rate)** in [ops/prometheus/alerts.yml](file:///d:/MLOps/ops/prometheus/alerts.yml).
+  * Evaluated continuously in PromQL:
   ```promql
   triageiq:feedback_error_ratio_1h = 
     sum by (model_version) (increase(triageiq_feedback_incorrect_total[1h]))
     /
     sum by (model_version) (increase(triageiq_feedback_total[1h]))
   ```
-  The alert `ModelErrorRateHigh` triggers if `feedback_error_ratio_1h > 0.54` AND at least 30 human verdicts were collected in the last hour, preventing false positives on low sample sizes.
+  * The alert `ModelErrorRateHigh` triggers if `feedback_error_ratio_1h > 0.30` and `feedback_count_1h >= 10`.
+* **Alertmanager Event-Driven Retraining**:
+  * When the alert fires, **Alertmanager** automatically posts a webhook to Jenkins with token `retrain-token` (`/generic-webhook-trigger/invoke?token=retrain-token` or `/job/triageiq/build?token=retrain-token`).
+  * Jenkins immediately launches the retraining pipeline without scheduled polling or cron jobs.
 
 ### Decision 3: Feedback Watermarking (`cutoff_id`)
 * When retraining on human reviews, repeatedly training on the exact same reviews causes overfitting and redundant work.

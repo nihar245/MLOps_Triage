@@ -1,7 +1,6 @@
 import os, sys
 from pathlib import Path
 
-os.environ.update({"HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1", "HF_HUB_DISABLE_SYMLINKS_WARNING": "1"})
 _ML = Path(__file__).resolve().parents[1] / "ml"
 if str(_ML) not in sys.path:
     sys.path.insert(0, str(_ML))

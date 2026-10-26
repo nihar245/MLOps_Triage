@@ -1,0 +1,19 @@
+global:
+  resolve_timeout: 1m
+
+route:
+  receiver: "jenkins-webhook"
+  group_by: ["alertname", "model_version"]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 30m
+
+receivers:
+  - name: "jenkins-webhook"
+    webhook_configs:
+      - url: "http://host.docker.internal:8080/job/TriageIQ-CI-Retrain/build?token=token&cause=Prometheus+Error+Rate+Exceeded+50%25"
+        http_config:
+          basic_auth:
+            username: "admin"
+            password: "111bad9cb2701fd3e037524225c5d06f82"
+        send_resolved: false

@@ -2,15 +2,6 @@
 
 import json, os, subprocess, sys, time, urllib.request
 
-# Ensure offline mode internally without needing manual Jenkins flags
-os.environ.update({
-    "PYTHONPATH": "ml",
-    "DATABASE_URL": os.getenv("DATABASE_URL", f"postgresql://triageiq:postgres@localhost:{os.getenv('POSTGRES_PORT', '5433')}/triageiq"),
-    "HF_HUB_OFFLINE": "1",
-    "TRANSFORMERS_OFFLINE": "1",
-    "HF_HUB_DISABLE_SYMLINKS_WARNING": "1",
-})
-
 
 def format_duration(seconds: float) -> str:
     m, s = divmod(int(seconds), 60)

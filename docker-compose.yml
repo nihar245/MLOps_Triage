@@ -14,7 +14,7 @@ services:
     image: ${REGISTRY:-}triageiq-gateway:${IMAGE_TAG:-dev}
     environment:
       GATEWAY_HTPASSWD: ${GATEWAY_HTPASSWD}
-    ports: ["127.0.0.1:${GATEWAY_PORT:-8080}:8080"]
+    ports: ["127.0.0.1:${GATEWAY_PORT:-8085}:8080"]
     tmpfs: [/tmp, "/etc/nginx/conf.d:uid=101,gid=101"]   # template is rendered into conf.d at start by UID 101
     depends_on:
       backend-api: {condition: service_healthy}
@@ -27,9 +27,10 @@ services:
     image: ${REGISTRY:-}triageiq-backend-api:${IMAGE_TAG:-dev}
     ports: ["127.0.0.1:8000:8000"]
     environment:
-      DATABASE_URL: postgresql://triageiq:${POSTGRES_PASSWORD}@postgres:5432/triageiq
+      DATABASE_URL: postgresql://triageiq:${POSTGRES_PASSWORD:-postgres}@postgres:5432/triageiq
       MODEL_SERVICE_URL: ${MODEL_SERVICE_URL:-http://model-service:8000}
       MODEL_CALL_TIMEOUT_SECONDS: ${MODEL_CALL_TIMEOUT_SECONDS:-30}
+      HF_MODEL_REPO: ${HF_MODEL_REPO:-triageiq-classifier}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     depends_on:
       postgres: {condition: service_healthy}
@@ -41,7 +42,7 @@ services:
     image: ${REGISTRY:-}triageiq-feedback-service:${IMAGE_TAG:-dev}
     ports: ["127.0.0.1:8001:8000"]
     environment:
-      DATABASE_URL: postgresql://triageiq:${POSTGRES_PASSWORD}@postgres:5432/triageiq
+      DATABASE_URL: postgresql://triageiq:${POSTGRES_PASSWORD:-postgres}@postgres:5432/triageiq
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     depends_on:
       postgres: {condition: service_healthy}
@@ -70,7 +71,7 @@ services:
     environment:
       POSTGRES_USER: triageiq
       POSTGRES_DB: triageiq
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports: ["127.0.0.1:${POSTGRES_PORT:-5433}:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck: {test: ["CMD-SHELL", "pg_isready -U triageiq"], interval: 5s, retries: 10}
@@ -100,6 +101,20 @@ services:
       - ./ops/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     ports: ["127.0.0.1:9090:9090"]
+    depends_on:
+      - alertmanager
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ./ops/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports: ["127.0.0.1:9093:9093"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   grafana:

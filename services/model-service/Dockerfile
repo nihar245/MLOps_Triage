@@ -4,9 +4,12 @@ RUN useradd --uid 1000 --create-home appuser
 WORKDIR /app
 COPY services/model-service/requirements.txt .
 RUN pip install -r requirements.txt \
- && pip uninstall -y setuptools wheel   # build-only tools from the base image, with known CVEs
+  && pip install dill==0.4.1 \
+  && pip uninstall -y setuptools wheel   # build-only tools from the base image, with known CVEs
+COPY ml/triage_ml ./triage_ml
 COPY ml/triage_ml/text.py ./app/text.py
 COPY services/model-service/app ./app
+ENV PYTHONPATH=/app
 USER 1000
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=120s --retries=3 \

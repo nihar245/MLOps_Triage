@@ -18,7 +18,8 @@ Before getting started, ensure you have the following installed on your machine:
 
 ### 1. Clone the Repository
 ```powershell
-git clone https://github.com/nihar245/MLOps_Triage.git .
+git clone https://github.com/nsk724/autoTagger.git
+cd autoTagger
 ```
 
 ### 2. Create Virtual Environment & Install Dependencies
@@ -81,7 +82,8 @@ All ports have been configured to prevent collisions with Windows services or Hy
 | **Gateway Reviewer UI** | [http://localhost:8085](http://localhost:8085) | `reviewer1` / `reviewer1` | Nginx reverse proxy, BasicAuth, rate-limiting & human review dashboard. |
 | **Model Inference API** | [http://localhost:8002/health](http://localhost:8002/health) | (No auth) | FastAPI CPU inference endpoint. Mounts local [artifacts/](file:///d:/MLOps/artifacts). |
 | **Prometheus Metrics** | [http://localhost:9090](http://localhost:9090) | (No auth) | Time-series metrics engine scraping backend and feedback services every 5s. Targets at `/targets`. |
-| **Grafana Dashboard** | [http://localhost:3005](http://localhost:3005) | `admin` / `admin` | Real-time monitoring dashboard (*TriageIQ Overview*) showing accuracy, error ratio vs. 0.54 threshold, and drift. |
+| **Grafana Dashboard** | [http://localhost:3005](http://localhost:3005) | `admin` / `admin` | Real-time monitoring dashboard (*TriageIQ Overview*) showing accuracy, error ratio vs. 0.30 threshold, and drift. |
+| **Alertmanager** | [http://localhost:9093](http://localhost:9093) | (No auth) | Webhook dispatcher. Posts to Jenkins `token` when error ratio exceeds 0.30. |
 | **Backend API** | [http://localhost:8000/docs](http://localhost:8000/docs) | Internal / Proxy | FastAPI ticket ingestion and label metadata service. |
 | **Feedback Service** | [http://localhost:8001/docs](http://localhost:8001/docs) | Internal / Proxy | Human verdict ingestion & active learning ground-truth store. |
 | **PostgreSQL 16** | `localhost:5433` | `triageiq` / `postgres` | Database storing tickets, predictions, and human reviews. |
